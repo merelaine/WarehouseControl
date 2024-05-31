@@ -2,13 +2,13 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:warehousecontrol/models/warehouse.dart';
 import 'package:warehousecontrol/models/provider.dart';
+import 'package:warehousecontrol/models/contract.dart';
 
 class DatabaseHelper {
   static late Database _database;
 
   static Future<Database> get database async {
     _database = await initDB();
-    await DatabaseHelper.printSchema();
     return _database;
   }
 
@@ -25,7 +25,7 @@ class DatabaseHelper {
       ''');
 
       await db.rawInsert('''
-        INSERT INTO users(username, password, position)
+        INSERT INTO users(username, password, role)
         VALUES('user', '123', 'storekeeper')
       ''');
 
@@ -76,6 +76,11 @@ class DatabaseHelper {
         VALUES('contract1', 1)
       ''');
 
+      await db.rawInsert('''
+        INSERT INTO contracts(name, provider_id)
+        VALUES('contract2', 2)
+      ''');
+
     }, version: 1, onConfigure: (db) async {
       await db.execute('PRAGMA foreign_keys = ON');
     });
@@ -112,29 +117,19 @@ class DatabaseHelper {
     });
   }
 
-
-
-  static Future<void> printSchema() async {
+  static Future<Warehouse> getWarehouseById(int id) async {
     Database db = await database;
-
-    List<Map<String, dynamic>> tables = await db.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='table';",
-    );
-
-    for (Map<String, dynamic> table in tables) {
-      String tableName = table['name'];
-      print("Table: $tableName");
-
-      List<Map<String, dynamic>> columns = await db.rawQuery(
-        "PRAGMA table_info($tableName);",
+    List<Map<String, dynamic>> result = await db.query('warehouses', where: 'id = ?', whereArgs: [id]);
+    if (result.isNotEmpty) {
+      return Warehouse(
+        id: result.first['id'],
+        name: result.first['name'],
+        address: result.first['address'],
       );
-
-      for (Map<String, dynamic> column in columns) {
-        print(" - ${column['name']} (${column['type']})");
-      }}}
-
-
-
+    } else {
+      throw Exception('Warehouse not found');
+    }
+  }
 
   static Future<List<Provider>> getProviders() async {
     Database db = await database;
@@ -143,6 +138,18 @@ class DatabaseHelper {
       return Provider(
         id: maps[i]['id'],
         name: maps[i]['name'],
+      );
+    });
+  }
+
+  static Future<List<Contract>> getContracts(int providerId) async {
+    Database db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('contracts', where: 'provider_id = ?', whereArgs: [providerId]);
+    return List.generate(maps.length, (i) {
+      return Contract(
+        id: maps[i]['id'],
+        name: maps[i]['name'],
+        providerId: maps[i]['provider_id'],
       );
     });
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:warehousecontrol/data/db_helper.dart';
-import 'package:warehousecontrol/shipping_page.dart';
+import 'package:warehousecontrol/contract_select.dart';
 import 'models/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,9 +47,10 @@ class _ProviderSelectionPageState extends State<ProviderSelectionPage> {
                   onTap: () async {
                     await saveSelectedProvider(provider);
                     Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => ShippingPage()),
-                    );
+                        context,
+                        MaterialPageRoute(
+                        builder: (context) => ContractSelectionPage(selectedProviderId: provider.id),
+                    ));
                   },
                 );
               },

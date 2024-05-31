@@ -1,12 +1,14 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:warehousecontrol/models/warehouse.dart';
+import 'package:warehousecontrol/models/provider.dart';
 
 class DatabaseHelper {
   static late Database _database;
 
   static Future<Database> get database async {
     _database = await initDB();
+    await DatabaseHelper.printSchema();
     return _database;
   }
 
@@ -18,7 +20,7 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY,
           username TEXT,
           password TEXT,
-          position TEXT
+          role TEXT
         )
       ''');
 
@@ -44,7 +46,39 @@ class DatabaseHelper {
         VALUES('warehouse2', 'address2')
       ''');
 
-    }, version: 1);
+      await db.execute('''
+          CREATE TABLE providers(
+            id INTEGER PRIMARY KEY,
+            name TEXT
+          )
+        ''');
+
+      await db.rawInsert('''
+        INSERT INTO providers(name)
+        VALUES('provider1')
+      ''');
+      await db.rawInsert('''
+        INSERT INTO providers(name)
+        VALUES('provider2')
+      ''');
+
+      await db.execute('''
+          CREATE TABLE contracts(
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            provider_id INTEGER,
+            FOREIGN KEY (provider_id) REFERENCES providers(id)
+          )
+        ''');
+
+      await db.rawInsert('''
+        INSERT INTO contracts(name, provider_id)
+        VALUES('contract1', 1)
+      ''');
+
+    }, version: 1, onConfigure: (db) async {
+      await db.execute('PRAGMA foreign_keys = ON');
+    });
   }
 
   Future<bool> authenticateUser(String username, String password) async {
@@ -74,6 +108,41 @@ class DatabaseHelper {
         id: maps[i]['id'],
         name: maps[i]['name'],
         address: maps[i]['address'],
+      );
+    });
+  }
+
+
+
+  static Future<void> printSchema() async {
+    Database db = await database;
+
+    List<Map<String, dynamic>> tables = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table';",
+    );
+
+    for (Map<String, dynamic> table in tables) {
+      String tableName = table['name'];
+      print("Table: $tableName");
+
+      List<Map<String, dynamic>> columns = await db.rawQuery(
+        "PRAGMA table_info($tableName);",
+      );
+
+      for (Map<String, dynamic> column in columns) {
+        print(" - ${column['name']} (${column['type']})");
+      }}}
+
+
+
+
+  static Future<List<Provider>> getProviders() async {
+    Database db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('providers');
+    return List.generate(maps.length, (i) {
+      return Provider(
+        id: maps[i]['id'],
+        name: maps[i]['name'],
       );
     });
   }

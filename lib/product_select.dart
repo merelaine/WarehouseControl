@@ -21,6 +21,7 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   Future<void> fetchProducts() async {
+    print(widget.selectedContractId);
     List<Map<String, dynamic>> productList = await DatabaseHelper.getProductsWithPricesByContractId(widget.selectedContractId);
 
     print('Fetched products: $productList');

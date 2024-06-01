@@ -5,6 +5,7 @@ import 'package:warehousecontrol/models/provider.dart';
 import 'package:warehousecontrol/models/warehouse.dart';
 import 'package:warehousecontrol/product_select.dart';
 import 'package:warehousecontrol/models/product.dart';
+import 'home_page.dart';
 
 class ReceiveDocumentPage extends StatefulWidget {
   final int selectedProviderId;
@@ -18,7 +19,7 @@ class ReceiveDocumentPage extends StatefulWidget {
 }
 
 class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
-  late String warehouseName;
+  late String warehouseName = '';
   late String providerName = '';
   late String contractName = '';
   late DateTime dateTime = DateTime.now();
@@ -64,7 +65,9 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
   }
 
   Future<void> saveReceiveDocument() async {
-    // Save receive document to database
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()));
   }
 
   void addItem() {
@@ -84,6 +87,8 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
     });
   }
 
+  double totalSum = 0.0;
+
   void addProductToDocument(Product product, String quantity, double price) {
     setState(() {
       items.add({
@@ -91,6 +96,9 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
         'quantity': quantity,
         'price': price,
       });
+
+      totalSum += (price * double.parse(quantity));
+
       quantityController.clear();
     });
   }
@@ -139,7 +147,8 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
                           actions: [
                             ElevatedButton(
                               onPressed: () {
-                                addProductToDocument(selectedProduct, quantity, price); // Add selected product to the document with quantity and price
+                                quantity = quantityController.text;
+                                addProductToDocument(selectedProduct, quantity, price);
                                 Navigator.pop(context);
                               },
                               child: Text('Добавить'),
@@ -149,32 +158,55 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
                       },
                     );
                   }
-                });},
+                });
+              },
               child: Text('Добавить товар'),
             ),
             SizedBox(height: 20),
-            DataTable(
-              columns: [
-                DataColumn(label: Text('Item')),
-                DataColumn(label: Text('Quantity')),
-                DataColumn(label: Text('Actions')),
-              ],
-              rows: items.asMap().entries.map((entry) {
-                int index = entry.key;
-                var item = entry.value;
-                return DataRow(cells: [
-                  DataCell(Text(item['product']['name'].toString())),
-                  DataCell(Text(item['quantity'].toString())),
-                  DataCell(
-                    IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => removeItem(index),
+            Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: [
+                        DataColumn(label: Text('Товар')),
+                        DataColumn(label: Text('Количество')),
+                        DataColumn(label: Text('Цена')),
+                        DataColumn(label: Text('Сумма')),
+                        DataColumn(label: Text('Удалить')),
+                      ],
+                      rows: [
+                        ...items.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          var item = entry.value;
+                          return DataRow(cells: [
+                            DataCell(Text(item['product'].productName)),
+                            DataCell(Text(item['quantity'].toString())),
+                            DataCell(Text(item['product'].productPrice.toString())),
+                            DataCell(Text((item['product'].productPrice * double.parse(item['quantity'])).toString())),
+                            DataCell(
+                              IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () => removeItem(index),
+                              ),
+                            ),
+                          ]);
+                        }).toList(),
+                        DataRow(cells: [
+                          DataCell(Text('')),
+                          DataCell(Text('')),
+                          DataCell(Text('')),
+                          DataCell(Text('Итого:')),
+                          DataCell(Text(totalSum.toString())),
+                        ]),
+                      ],
                     ),
                   ),
-                ]);
-              }).toList(),
+                ),
+              ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 50),
             ElevatedButton(
               onPressed: () {
                 saveReceiveDocument();

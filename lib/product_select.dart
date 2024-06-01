@@ -12,7 +12,7 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
-  late List<Map<String, dynamic>> productsWithPrices = [];
+  late List<Product> productsWithPrices = [];
 
   @override
   void initState() {
@@ -22,7 +22,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Future<void> fetchProducts() async {
     print(widget.selectedContractId);
-    List<Map<String, dynamic>> productList = await DatabaseHelper.getProductsWithPricesByContractId(widget.selectedContractId);
+    List<Product> productList = await DatabaseHelper.getProductsWithPricesByContractId(widget.selectedContractId);
 
     print('Fetched products: $productList');
 
@@ -31,8 +31,8 @@ class _ProductListPageState extends State<ProductListPage> {
     });
   }
 
-  void addItem(Map<String, dynamic> product) {
-    // Add the selected product to the list
+  void addItem(Product product) {
+    Navigator.pop(context, product);
   }
 
   @override
@@ -50,8 +50,8 @@ class _ProductListPageState extends State<ProductListPage> {
               itemCount: productsWithPrices.length,
               itemBuilder: (BuildContext context, int index) {
                 return ListTile(
-                  title: Text(productsWithPrices[index]['name']),
-                  subtitle: Text('\$${productsWithPrices[index]['price'].toStringAsFixed(2)}'),
+                  title: Text(productsWithPrices[index].name),
+                  subtitle: Text('\$${productsWithPrices[index].price.toStringAsFixed(2)}'),
                   onTap: () {
                     addItem(productsWithPrices[index]);
                   },

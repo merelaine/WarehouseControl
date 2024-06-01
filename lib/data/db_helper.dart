@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'package:warehousecontrol/models/warehouse.dart';
 import 'package:warehousecontrol/models/provider.dart';
 import 'package:warehousecontrol/models/contract.dart';
+import 'package:warehousecontrol/models/product.dart';
 
 class DatabaseHelper {
   static late Database _database;
@@ -194,13 +195,17 @@ class DatabaseHelper {
     });
   }
 
-  static Future<List<Map<String, dynamic>>> getProductsWithPricesByContractId(int contractId) async {
+  static Future<List<Product>> getProductsWithPricesByContractId(int contractId) async {
     Database db = await database;
-    return await db.rawQuery('''
+    List<Map<String, dynamic>> results = await db.rawQuery('''
     SELECT products.id, products.name, contract_products.price 
     FROM products 
     INNER JOIN contract_products ON products.id = contract_products.product_id 
     WHERE contract_products.contract_id = $contractId
   ''');
+
+    List<Product> products = results.map((map) => Product.fromMap(map)).toList();
+
+    return products;
   }
 }

@@ -3,6 +3,8 @@ import 'package:warehousecontrol/data/db_helper.dart';
 import 'package:warehousecontrol/models/contract.dart';
 import 'package:warehousecontrol/models/provider.dart';
 import 'package:warehousecontrol/models/warehouse.dart';
+import 'package:warehousecontrol/product_select.dart';
+import 'package:warehousecontrol/models/product.dart';
 
 class ReceiveDocumentPage extends StatefulWidget {
   final int selectedProviderId;
@@ -82,6 +84,17 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
     });
   }
 
+  void addProductToDocument(Product product, String quantity, double price) {
+    setState(() {
+      items.add({
+        'product': product,
+        'quantity': quantity,
+        'price': price,
+      });
+      quantityController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,17 +112,59 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
             Text('Поставщик: $providerName'),
             Text('Договор: $contractName'),
             SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductListPage(selectedContractId: widget.selectedContractId),
+                  ),
+                ).then((selectedProduct) {
+                  if (selectedProduct != null) {
+                    double price = selectedProduct['price'];
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        String quantity = '';
+                        return AlertDialog(
+                          title: Text('Введите количество'),
+                          content: TextField(
+                            controller: quantityController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(labelText: 'Количество'),
+                            onChanged: (value) {
+                              quantity = value;
+                            },
+                          ),
+                          actions: [
+                            ElevatedButton(
+                              onPressed: () {
+                                addProductToDocument(selectedProduct, quantity, price); // Add selected product to the document with quantity and price
+                                Navigator.pop(context);
+                              },
+                              child: Text('Добавить'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                });},
+              child: Text('Добавить товар'),
+            ),
+            SizedBox(height: 20),
             DataTable(
               columns: [
                 DataColumn(label: Text('Item')),
                 DataColumn(label: Text('Quantity')),
                 DataColumn(label: Text('Actions')),
               ],
-              rows: items.map((item) {
-                int index = items.indexOf(item);
+              rows: items.asMap().entries.map((entry) {
+                int index = entry.key;
+                var item = entry.value;
                 return DataRow(cells: [
-                  DataCell(Text(item['item'])),
-                  DataCell(Text(item['quantity'])),
+                  DataCell(Text(item['product']['name'].toString())),
+                  DataCell(Text(item['quantity'].toString())),
                   DataCell(
                     IconButton(
                       icon: Icon(Icons.delete),
@@ -120,22 +175,11 @@ class _ReceiveDocumentPageState extends State<ReceiveDocumentPage> {
               }).toList(),
             ),
             SizedBox(height: 20),
-            TextField(
-              controller: itemController,
-              decoration: InputDecoration(labelText: 'Item'),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: quantityController,
-              decoration: InputDecoration(labelText: 'Quantity'),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                addItem();
+                saveReceiveDocument();
               },
-              child: Text('Add'),
+              child: Text('Сохранить'),
             ),
           ],
         ),

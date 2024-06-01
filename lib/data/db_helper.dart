@@ -81,6 +81,46 @@ class DatabaseHelper {
         VALUES('contract2', 2)
       ''');
 
+      await db.execute('''
+          CREATE TABLE products(
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            price REAL
+          )
+        ''');
+
+      await db.execute('''
+          CREATE TABLE contract_products(
+            id INTEGER PRIMARY KEY,
+            contract_id INTEGER,
+            product_id INTEGER,
+            price REAL,
+            FOREIGN KEY (contract_id) REFERENCES contracts(id),
+            FOREIGN KEY (product_id) REFERENCES products(id)
+          )
+        ''');
+
+      await db.rawInsert('''
+        INSERT INTO products(name, price)
+        VALUES('product1', 10.0)
+      ''');
+
+      await db.rawInsert('''
+        INSERT INTO products(name, price)
+        VALUES('product2', 15.0)
+      ''');
+
+      await db.rawInsert('''
+        INSERT INTO contract_products(contract_id, product_id, price)
+        VALUES(1, 1, 20.0)
+      ''');
+
+      await db.rawInsert('''
+        INSERT INTO contract_products(contract_id, product_id, price)
+        VALUES(1, 2, 25.0)
+      ''');
+
+
     }, version: 1, onConfigure: (db) async {
       await db.execute('PRAGMA foreign_keys = ON');
     });
@@ -152,5 +192,15 @@ class DatabaseHelper {
         providerId: maps[i]['provider_id'],
       );
     });
+  }
+
+  static Future<List<Map<String, dynamic>>> getProductsWithPricesByContractId(int contractId) async {
+    Database db = await database;
+    return await db.rawQuery('''
+    SELECT products.id, products.name, contract_products.price 
+    FROM products 
+    INNER JOIN contract_products ON products.id = contract_products.product_id 
+    WHERE contract_products.contract_id = $contractId
+  ''');
   }
 }

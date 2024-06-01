@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:warehousecontrol/models/warehouse.dart';
 import 'package:warehousecontrol/data/db_helper.dart';
 import 'package:warehousecontrol/provider_select.dart';
-import 'shipping_page.dart';
+import 'order_page.dart';
 
 class HomePage extends StatelessWidget {
   Future<String> getSelectedWarehouseName() async {
@@ -31,10 +31,10 @@ class HomePage extends StatelessWidget {
               MaterialPageRoute(builder: (context) => ProviderSelectionPage()),
             );
           }),
-          _buildMenuItem(context, 'Отгрузка', () {
+          _buildMenuItem(context, 'Сборка заказов', () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ShippingPage()),
+              MaterialPageRoute(builder: (context) => OrderPage()),
             );
           }),
         ],

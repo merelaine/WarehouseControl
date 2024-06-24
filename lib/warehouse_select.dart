@@ -27,7 +27,7 @@ class _WarehouseSelectionPageState extends State<WarehouseSelectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Выберите склад'),
+        title: Text('Выберите склад '),
       ),
       body: FutureBuilder<List<Warehouse>>(
         future: warehouseList,

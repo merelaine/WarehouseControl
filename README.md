@@ -1,8 +1,3 @@
-Команда:
-Чернигова Мария, КИ21-15Б
-E-mail: chms555@yandex.ru
-vk/telegram: @merelained
-
 1. Название проекта:
    Название проекта – «WarehouseControl»
 2. Цель проекта:
